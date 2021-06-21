@@ -72,6 +72,11 @@ resource "aws_launch_configuration" "main" {
   user_data            = var.user_data
   user_data_base64     = var.user_data_base64
 
+  metadata_options {
+    # Require use of IMDSv2
+    http_tokens = var.imdsv2 == true ? "required" : "true"
+  }
+
   dynamic "ebs_block_device" {
     iterator = device
     for_each = var.ebs_block_devices
