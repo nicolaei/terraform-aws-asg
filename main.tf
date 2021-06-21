@@ -114,53 +114,43 @@ locals {
   ]
 }
 
-resource "aws_cloudformation_stack" "main" {
-  depends_on    = [aws_launch_configuration.main]
-  name          = "${var.name_prefix}-asg"
-  template_body = <<EOF
-Description: "Autoscaling group created by Terraform."
-Resources:
-  AutoScalingGroup:
-    Type: "AWS::AutoScaling::AutoScalingGroup"
-    Properties:
-      Cooldown: 300
-      HealthCheckType: "${var.health_check_type}"
-      HealthCheckGracePeriod: 300
-      LaunchConfigurationName: "${aws_launch_configuration.main.id}"
-      MinSize: "${var.min_size}"
-      MaxSize: "${var.max_size}"
-      MetricsCollection:
-        - Granularity: 1Minute
-          Metrics:
-            - GroupMinSize
-            - GroupMaxSize
-            - GroupDesiredCapacity
-            - GroupInServiceInstances
-            - GroupPendingInstances
-            - GroupStandbyInstances
-            - GroupTerminatingInstances
-            - GroupTotalInstances
-      Tags: ${jsonencode(local.asg_tags)}
-      TerminationPolicies:
-        - OldestLaunchConfiguration
-        - OldestInstance
-        - Default
-      VPCZoneIdentifier: ${jsonencode(var.subnet_ids)}
-    UpdatePolicy:
-      AutoScalingRollingUpdate:
-        MinInstancesInService: "${var.min_size}"
-        MaxBatchSize: "2"
-        WaitOnResourceSignals: "${var.await_signal}"
-        PauseTime: "${var.pause_time}"
-        SuspendProcesses:
-          - HealthCheck
-          - ReplaceUnhealthy
-          - AZRebalance
-          - AlarmNotification
-          - ScheduledActions
-Outputs:
-  AsgName:
-    Description: The name of the auto scaling group
-    Value: !Ref AutoScalingGroup
-EOF
+resource "aws_autoscaling_group" "main" {
+  max_size = var.max_size
+  min_size = var.max_size
+
+  default_cooldown = 300
+
+  health_check_type = var.health_check_type
+  health_check_grace_period = 300
+
+  launch_configuration = aws_launch_configuration.main.id
+
+  metrics_granularity = "1Minute"
+  enabled_metrics = [
+    "GroupMinSize",
+    "GroupMaxSize",
+    "GroupDesiredCapacity",
+    "GroupInServiceInstances",
+    "GroupPendingInstances",
+    "GroupStandbyInstances",
+    "GroupTerminatingInstances",
+    "GroupTotalInstances"
+  ]
+
+  suspended_processes = [
+    "HealthCheck",
+    "ReplaceUnhealthy",
+    "AZRebalance",
+    "AlarmNotification",
+    "ScheduledActions"
+  ]
+  termination_policies = [
+    "OldestLaunchConfiguration",
+    "OldestInstance",
+    "Default"
+  ]
+
+  vpc_zone_identifier = var.subnet_ids
+
+  tags = var.tags
 }
