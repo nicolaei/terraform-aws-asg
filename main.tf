@@ -74,7 +74,7 @@ resource "aws_launch_configuration" "main" {
 
   metadata_options {
     # Require use of IMDSv2
-    http_tokens = var.imdsv2 == true ? "required" : "true"
+    http_tokens = var.require_imdsv2 ? "required" : "optional"
   }
 
   dynamic "ebs_block_device" {

@@ -57,7 +57,7 @@ variable "instance_volume_size" {
   default     = 30
 }
 
-variable "imdsv2" {
+variable "require_imdsv2" {
   description = "Require instances to use Instance Metadata Service V2"
   type = bool
   default = false
